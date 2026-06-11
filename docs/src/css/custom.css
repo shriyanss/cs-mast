@@ -1,0 +1,38 @@
+/**
+ * CS-MAST docs theme — blue/indigo accent
+ */
+
+:root {
+  --ifm-color-primary: #3b6fd4;
+  --ifm-color-primary-dark: #2f5fbd;
+  --ifm-color-primary-darker: #2b59b3;
+  --ifm-color-primary-darkest: #234794;
+  --ifm-color-primary-light: #5080db;
+  --ifm-color-primary-lighter: #5b88de;
+  --ifm-color-primary-lightest: #7ba0e6;
+  --ifm-code-font-size: 93%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.08);
+  --ifm-font-family-monospace: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #7ba0e6;
+  --ifm-color-primary-dark: #5b88de;
+  --ifm-color-primary-darker: #5080db;
+  --ifm-color-primary-darkest: #3b6fd4;
+  --ifm-color-primary-light: #9ab8ec;
+  --ifm-color-primary-lighter: #adc5ef;
+  --ifm-color-primary-lightest: #c7d9f5;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.08);
+}
+
+/* Tighten table padding */
+table th,
+table td {
+  padding: 0.5rem 0.75rem;
+}
+
+/* Monospace for inline code in tables */
+table code {
+  white-space: nowrap;
+}

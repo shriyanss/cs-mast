@@ -1,0 +1,109 @@
+import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
+
+const config: Config = {
+  title: 'CS-MAST',
+  tagline: 'Context-Stratified Merkelized Abstract Syntax Tree — reference TypeScript implementation',
+  favicon: 'img/favicon.ico',
+
+  future: {
+    v4: true,
+  },
+
+  url: 'https://cs-mast.ss0x00.com',
+  baseUrl: '/',
+
+  organizationName: 'shriyanss',
+  projectName: 'cs-mast',
+
+  onBrokenLinks: 'warn',
+  onBrokenAnchors: 'warn',
+
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en'],
+  },
+
+  presets: [
+    [
+      'classic',
+      {
+        docs: {
+          sidebarPath: './sidebars.ts',
+          editUrl: 'https://github.com/shriyanss/cs-mast/tree/main/docs/',
+          routeBasePath: '/',
+        },
+        blog: false,
+        theme: {
+          customCss: './src/css/custom.css',
+        },
+      } satisfies Preset.Options,
+    ],
+  ],
+
+  themeConfig: {
+    colorMode: {
+      respectPrefersColorScheme: true,
+    },
+    navbar: {
+      title: 'CS-MAST',
+      items: [
+        {
+          type: 'docSidebar',
+          sidebarId: 'docs',
+          position: 'left',
+          label: 'Docs',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'api',
+          position: 'left',
+          label: 'API Reference',
+        },
+        {
+          href: 'https://github.com/shriyanss/cs-mast',
+          label: 'GitHub',
+          position: 'right',
+        },
+      ],
+    },
+    footer: {
+      style: 'dark',
+      links: [
+        {
+          title: 'Docs',
+          items: [
+            { label: 'Getting Started', to: '/getting-started' },
+            { label: 'Configuration', to: '/configuration' },
+            { label: 'Signature Format', to: '/signature-format' },
+          ],
+        },
+        {
+          title: 'API',
+          items: [
+            { label: 'cs_mast_init', to: '/api/cs-mast-init' },
+            { label: 'cs_mast_s_exists', to: '/api/cs-mast-s-exists' },
+            { label: 'Types', to: '/api/types' },
+          ],
+        },
+        {
+          title: 'More',
+          items: [
+
+            { label: 'GitHub', href: 'https://github.com/shriyanss/cs-mast' },
+          ],
+        },
+      ],
+      copyright: `Copyright © ${new Date().getFullYear()} Shriyans Sudhi. Built with Docusaurus.`,
+    },
+    prism: {
+      theme: prismThemes.github,
+      darkTheme: prismThemes.dracula,
+      additionalLanguages: ['typescript', 'bash'],
+    },
+    algolia: undefined,
+  } satisfies Preset.ThemeConfig,
+};
+
+export default config;
