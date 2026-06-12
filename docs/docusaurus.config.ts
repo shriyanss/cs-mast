@@ -48,6 +48,10 @@ const config: Config = {
     },
     navbar: {
       title: 'CS-MAST',
+      logo: {
+        alt: 'CS-MAST Logo',
+        src: 'img/cs-mast-logo-plain-bg.png',
+      },
       items: [
         {
           type: 'docSidebar',
