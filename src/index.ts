@@ -33,3 +33,6 @@ export { guardPath, RESTRICTED_METHODS } from './guard/path-guard';
 // ─── Hash utilities (for advanced use / testing) ──────────────────────────────
 export { sha256 } from './hash/sha256';
 export { computeNodeHash, computeDefaultHash } from './hash/hash-formulas';
+
+// ─── Version ──────────────────────────────────────────────────────────────────
+export { version } from './version';

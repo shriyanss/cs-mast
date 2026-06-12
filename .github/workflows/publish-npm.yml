@@ -1,0 +1,104 @@
+name: Publish cs-mast
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  version_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check version mismatch
+        run: |
+          echo "[i] Checking if the version in CHANGELOG.md, package.json, src/version.ts, and GitHub release tag matches"
+          PACKAGE_JSON_VERSION=$(cat package.json | jq ".version" -r)
+          CHANGELOG_VERSION=$(cat CHANGELOG.md | grep -E "^## [0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta)(\.[0-9]+)?)?" | head -n 1 | sed -E 's/^## ([0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta)(\.[0-9]+)?)?).*/\1/')
+          GITHUB_RELEASE_VERSION=$(echo "$GITHUB_RELEASE_VERSION_RAW" | sed -E 's/^[[:space:]]*v//')
+          VERSION_TS_VERSION=$(grep -E '^export const version =' src/version.ts | sed -E 's/^export const version = "(.*)";/\1/')
+          if [[ "$PACKAGE_JSON_VERSION" != "$CHANGELOG_VERSION" ]]; then
+            echo "Version mismatch: package.json ($PACKAGE_JSON_VERSION) != CHANGELOG.md ($CHANGELOG_VERSION)"
+            exit 1
+          elif [[ "$PACKAGE_JSON_VERSION" != "$GITHUB_RELEASE_VERSION" ]]; then
+            echo "Version mismatch: package.json ($PACKAGE_JSON_VERSION) != GitHub release tag ($GITHUB_RELEASE_VERSION)"
+            exit 1
+          elif [[ "$PACKAGE_JSON_VERSION" != "$VERSION_TS_VERSION" ]]; then
+            echo "Version mismatch: package.json ($PACKAGE_JSON_VERSION) != src/version.ts ($VERSION_TS_VERSION)"
+            exit 1
+          else
+            echo "[✓] All version sources match: $PACKAGE_JSON_VERSION"
+          fi
+        env:
+          GITHUB_RELEASE_VERSION_RAW: ${{ github.event.release.tag_name }}
+
+  audit:
+    needs: version_check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - name: Run npm audit
+        run: npm audit
+
+  build:
+    needs: audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm test
+
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org/
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build
+      - name: Publish to npm
+        run: |
+          TAG="latest"
+          [[ "$VERSION" == *"beta"* ]] && TAG="beta"
+          [[ "$VERSION" == *"alpha"* ]] && TAG="alpha"
+          echo "[i] Publishing with tag: $TAG"
+          npm publish --tag $TAG
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+          VERSION: ${{ github.event.release.tag_name }}
+
+  merge_main_and_dev:
+    needs:
+      - publish-npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          fetch-depth: 0
+      - name: Merge main into dev
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git fetch origin main:main
+          git fetch origin dev:dev
+          git checkout dev
+          git merge --no-ff -m "chore: merge changes after release $VERSION" main -X theirs || (git status && git diff && exit 0)
+          git push origin dev
+        env:
+          VERSION: ${{ github.event.release.tag_name }}

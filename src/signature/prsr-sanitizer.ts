@@ -1,4 +1,4 @@
-const ALLOWED = /[a-zA-Z0-9/+.\-]/;
+const ALLOWED = /[a-zA-Z0-9/+.-]/;
 
 /**
  * Sanitizes a parser name for use in the prsr field.

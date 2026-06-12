@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { cs_mast_init, CS_MAST_SIGNATURE_KEY } from '../../src/core/cs-mast-init';
 import { parseSignature } from '../../src/signature/signature-parser';
-import { sha256 } from '../../src/hash/sha256';
 import type { CsMastConfig } from '../../src/types/config';
 import type { AdapterNode } from '../../src/types/node-descriptor';
 import { ConfigError } from '../../src/errors';
@@ -109,12 +108,12 @@ describe('Collision avoidance', () => {
     const sigs1 = new Set(t1._signatureMap.keys());
     const sigs2 = new Set(t2._signatureMap.keys());
     // The VariableDeclaration signatures must differ
-    const intersection = [...sigs1].filter((s) => sigs2.has(s));
+    const _intersection = [...sigs1].filter((s) => sigs2.has(s));
     // At minimum the root hashes must differ
     expect(t1.rootHash).not.toBe(t2.rootHash);
     // Verify no overlap in the VD-level sigs specifically
-    const letVD  = [...sigs1].find((s) => s.includes('VariableDeclaration') || parseSignature(s)?.hashHex !== undefined);
-    const constVD = [...sigs2].find((s) => s.includes('VariableDeclaration') || parseSignature(s)?.hashHex !== undefined);
+    const _letVD  = [...sigs1].find((s) => s.includes('VariableDeclaration') || parseSignature(s)?.hashHex !== undefined);
+    const _constVD = [...sigs2].find((s) => s.includes('VariableDeclaration') || parseSignature(s)?.hashHex !== undefined);
     // Simple check: at least one signature differs
     expect([...sigs1].sort().join(',')).not.toBe([...sigs2].sort().join(','));
   });

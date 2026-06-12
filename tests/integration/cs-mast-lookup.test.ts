@@ -36,7 +36,7 @@ describe('cs_mast_s_exists', () => {
   it('returns false for a valid-format signature from a different source', () => {
     const otherTree = cs_mast_init('const other = 999;', cfg);
     const otherSigs = [...otherTree._signatureMap.keys()];
-    for (const sig of otherSigs) {
+    for (const _sig of otherSigs) {
       // Each sig in otherTree might or might not appear in tree; specifically
       // the NumericLiteral 999 signature should NOT appear in tree
       // (tree has "hello" and other identifiers, not 999)

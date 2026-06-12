@@ -1,0 +1,115 @@
+name: Build & Prettify Code
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  version_check:
+    if: |
+      !startsWith(github.event.head_commit.message, 'chore: merge changes after release') &&
+      !startsWith(github.event.head_commit.message, 'chore: prettify code')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check version mismatch
+        run: |
+          echo "[i] Checking if the version in CHANGELOG.md, package.json, and src/version.ts matches"
+          PACKAGE_JSON_VERSION=$(cat package.json | jq ".version" -r)
+          CHANGELOG_VERSION=$(cat CHANGELOG.md | grep -E "^## [0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta)(\.[0-9]+)?)?" | head -n 1 | sed -E 's/^## ([0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta)(\.[0-9]+)?)?).*/\1/')
+          VERSION_TS_VERSION=$(grep -E '^export const version =' src/version.ts | sed -E 's/^export const version = "(.*)";/\1/')
+          if [[ "$PACKAGE_JSON_VERSION" != "$CHANGELOG_VERSION" ]]; then
+            echo "Version number mismatch between PACKAGE_JSON_VERSION ($PACKAGE_JSON_VERSION) and CHANGELOG_VERSION ($CHANGELOG_VERSION)"
+            exit 1
+          elif [[ "$PACKAGE_JSON_VERSION" != "$VERSION_TS_VERSION" ]]; then
+            echo "Version number mismatch between PACKAGE_JSON_VERSION ($PACKAGE_JSON_VERSION) and VERSION_TS_VERSION ($VERSION_TS_VERSION)"
+            exit 1
+          else
+            echo "[✓] Version matches: $PACKAGE_JSON_VERSION"
+            echo "[i] Checking if the version already exists on npm"
+            if npm view "@shriyanss/cs-mast@$PACKAGE_JSON_VERSION" version >/dev/null 2>&1; then
+              echo "Version $PACKAGE_JSON_VERSION already exists on npm."
+              exit 1
+            else
+              echo "[✓] Version $PACKAGE_JSON_VERSION does not exist on npm yet."
+            fi
+          fi
+
+  audit:
+    runs-on: ubuntu-latest
+    needs: version_check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run npm audit
+        run: npm audit
+
+  prettier:
+    runs-on: ubuntu-latest
+    needs: audit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Prettier
+        run: npx prettier --write . --config .prettierrc
+      - name: Remove node_modules
+        run: rm -rf node_modules
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: prettify code" || echo "No changes to commit"
+          git push
+
+  build:
+    needs: prettier
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
