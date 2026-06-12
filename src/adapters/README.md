@@ -24,6 +24,7 @@ export class MyAdapter implements IParserAdapter {
 ## Required: `parse()`
 
 Return an `AdapterNode` tree. Every node must have:
+
 - `nodeType`: the parser's canonical node type name (string)
 - `children`: ALL direct child `AdapterNode`s in source order
 - `refs`: named children needed by hash formulas (see below)

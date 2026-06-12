@@ -1,66 +1,66 @@
 {
-  "name": "@shriyanss/cs-mast",
-  "version": "0.1.1",
-  "description": "Context-Stratified Merkelized Abstract Syntax Tree — reference TypeScript implementation",
-  "keywords": [
-    "ast",
-    "merkle",
-    "sast",
-    "static-analysis",
-    "hashing",
-    "fingerprinting",
-    "babel",
-    "javascript"
-  ],
-  "homepage": "https://cs-mast.ss0x00.com",
-  "bugs": {
-    "url": "https://github.com/shriyanss/cs-mast/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/shriyanss/cs-mast.git"
-  },
-  "license": "MIT",
-  "author": "Shriyans Sudhi",
-  "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "directories": {
-    "doc": "docs",
-    "test": "tests"
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "test": "jest",
-    "test:coverage": "jest --coverage",
-    "lint": "eslint src tests",
-    "lint:fix": "eslint src tests --fix",
-    "format": "prettier --write . --config .prettierrc",
-    "clean": "rm -rf dist",
-    "prepublishOnly": "npm run build"
-  },
-  "dependencies": {
-    "@babel/parser": "^7.24.0",
-    "@babel/traverse": "^7.24.0",
-    "@babel/types": "^7.24.0"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.5.0",
-    "@types/babel__traverse": "^7.20.0",
-    "@types/jest": "^29.5.0",
-    "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "eslint": "^9.5.0",
-    "jest": "^29.0.0",
-    "prettier": "^3.3.0",
-    "ts-jest": "^29.0.0",
-    "typescript": "^5.4.0"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+    "name": "@shriyanss/cs-mast",
+    "version": "0.1.1",
+    "description": "Context-Stratified Merkelized Abstract Syntax Tree — reference TypeScript implementation",
+    "keywords": [
+        "ast",
+        "merkle",
+        "sast",
+        "static-analysis",
+        "hashing",
+        "fingerprinting",
+        "babel",
+        "javascript"
+    ],
+    "homepage": "https://cs-mast.ss0x00.com",
+    "bugs": {
+        "url": "https://github.com/shriyanss/cs-mast/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/shriyanss/cs-mast.git"
+    },
+    "license": "MIT",
+    "author": "Shriyans Sudhi",
+    "type": "commonjs",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "directories": {
+        "doc": "docs",
+        "test": "tests"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "lint": "eslint src tests",
+        "lint:fix": "eslint src tests --fix",
+        "format": "prettier --write . --config .prettierrc",
+        "clean": "rm -rf dist",
+        "prepublishOnly": "npm run build"
+    },
+    "dependencies": {
+        "@babel/parser": "^7.24.0",
+        "@babel/traverse": "^7.24.0",
+        "@babel/types": "^7.24.0"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.5.0",
+        "@types/babel__traverse": "^7.20.0",
+        "@types/jest": "^29.5.0",
+        "@types/node": "^20.0.0",
+        "@typescript-eslint/eslint-plugin": "^8.0.0",
+        "@typescript-eslint/parser": "^8.0.0",
+        "eslint": "^9.5.0",
+        "jest": "^29.0.0",
+        "prettier": "^3.3.0",
+        "ts-jest": "^29.0.0",
+        "typescript": "^5.4.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
 }
