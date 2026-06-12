@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.1.1 - 2026-06-12
+
+### Changed
+
+- Fix CI workflows to use `GITHUB_TOKEN` instead of `DEPLOY_KEY` for prettier auto-commit and post-release merge (no `DEPLOY_KEY` secret required)
+
 ## 0.1.0 - 2026-06-12
 
 ### Added

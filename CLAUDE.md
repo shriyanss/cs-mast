@@ -105,3 +105,59 @@ See `src/adapters/README.md`.
 `replaceWith`, `replaceWithMultiple`, `replaceWithSourceString`, `replaceInline`, `insertBefore`, `insertAfter`, `remove`, `pushContainer`, `unshiftContainer`.
 
 **Limitation:** Direct property assignment `path.node.x = y` cannot be intercepted at runtime in JavaScript. TypeScript-level protection only via `Readonly<>`.
+
+---
+
+## Release Process
+
+Branch strategy: `main` (locked, only `dev` merges in) → `dev` → feature branches.
+
+### Steps
+
+1. **Switch to `dev`** and pull latest:
+   ```bash
+   git checkout dev && git pull origin dev
+   ```
+
+2. **Make changes**, bump version in all three places:
+   - `package.json` → `"version": "X.Y.Z"`
+   - `src/version.ts` → `export const version = "X.Y.Z";`
+   - `CHANGELOG.md` → add `## X.Y.Z - YYYY-MM-DD` section at the top
+
+3. **Commit and push** to `dev`:
+   ```bash
+   git push origin dev
+   ```
+   This triggers `build-and-prettify` CI (version_check → audit → prettier → build → test).
+
+4. **Create PR** `dev → main`:
+   ```bash
+   gh pr create --base main --head dev --title "chore: release vX.Y.Z" --body "..."
+   ```
+   The `pr-checker` workflow verifies source is `dev`; it passes immediately for `dev` PRs.
+
+5. **Wait for all checks to pass**, then **merge**:
+   ```bash
+   gh pr merge <PR_NUMBER> --merge
+   ```
+
+6. **Create GitHub release** (triggers npm publish):
+   ```bash
+   gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."
+   ```
+   This triggers `publish-npm` CI: version_check → audit → build+test → npm publish → merge main→dev.
+
+### Version naming
+
+| Suffix | npm dist-tag |
+|--------|-------------|
+| none   | `latest`    |
+| `-beta` | `beta`     |
+| `-alpha` | `alpha`   |
+
+### Required secrets
+
+| Secret | Purpose |
+|--------|---------|
+| `NPM_TOKEN` | npm publish (referenced as `secrets.npm_token` — GitHub is case-insensitive) |
+| `GITHUB_TOKEN` | prettier auto-commit push, post-release dev merge (built-in, no setup needed) |
