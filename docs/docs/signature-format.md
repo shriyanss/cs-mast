@@ -100,7 +100,7 @@ files are passed to `cs_mast_init_codebase`.
 ## Codec
 
 ```typescript
-import { parseSignature, buildSignature } from 'cs-mast';
+import { parseSignature, buildSignature } from '@shriyanss/cs-mast';
 
 // Parse
 const sig = '$v=1$hash=sha256,lang=js,prsr=-babel/parser,scat=lit$' + 'a'.repeat(64);

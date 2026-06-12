@@ -34,7 +34,7 @@ A `Proxy<T>` with identical interface, guarded against mutation.
 ### Example
 
 ```typescript
-import { guardPath, MutationError } from 'cs-mast';
+import { guardPath, MutationError } from '@shriyanss/cs-mast';
 import traverse from '@babel/traverse';
 import { parse } from '@babel/parser';
 
@@ -98,7 +98,7 @@ Used internally by `guardPath` for each restricted method.
 ### Example
 
 ```typescript
-import { makeGuard, MutationError } from 'cs-mast';
+import { makeGuard, MutationError } from '@shriyanss/cs-mast';
 
 const guard = makeGuard('remove');
 guard(); // throws MutationError: "CS-MAST mutation guard: 'remove' is not allowed..."

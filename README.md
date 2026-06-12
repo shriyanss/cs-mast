@@ -11,7 +11,7 @@ See the specification paper for the full algorithm description.
 ## Install
 
 ```bash
-npm install cs-mast
+npm install @shriyanss/cs-mast
 ```
 
 ---
@@ -19,7 +19,7 @@ npm install cs-mast
 ## Quick Start
 
 ```typescript
-import { cs_mast_init, cs_mast_s_exists } from 'cs-mast';
+import { cs_mast_init, cs_mast_s_exists } from '@shriyanss/cs-mast';
 
 const tree = cs_mast_init(
   `const greet = (name) => "hello " + name;`,

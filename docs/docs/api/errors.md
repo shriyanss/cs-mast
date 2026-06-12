@@ -25,7 +25,7 @@ class ParseError extends Error {
 ### Example
 
 ```typescript
-import { cs_mast_init, ParseError } from 'cs-mast';
+import { cs_mast_init, ParseError } from '@shriyanss/cs-mast';
 
 try {
   cs_mast_init('const = =;', config);
@@ -61,7 +61,7 @@ class ConfigError extends Error {
 ### Example
 
 ```typescript
-import { cs_mast_init, ConfigError } from 'cs-mast';
+import { cs_mast_init, ConfigError } from '@shriyanss/cs-mast';
 
 try {
   cs_mast_init('let x = 1;', {
@@ -93,7 +93,7 @@ class MutationError extends Error {
 ### Example
 
 ```typescript
-import { guardPath, MutationError } from 'cs-mast';
+import { guardPath, MutationError } from '@shriyanss/cs-mast';
 
 const safePath = guardPath(babelNodePath);
 

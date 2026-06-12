@@ -9,7 +9,7 @@ sidebar_position: 1
 All exports are available from the `cs-mast` package root:
 
 ```typescript
-import { cs_mast_init, cs_mast_s_exists, /* ... */ } from 'cs-mast';
+import { cs_mast_init, cs_mast_s_exists, /* ... */ } from '@shriyanss/cs-mast';
 ```
 
 ---

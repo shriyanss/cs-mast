@@ -95,7 +95,7 @@ Same as [`cs_mast_init`](./cs-mast-init#throws) — `ConfigError` or `ParseError
 ### Basic codebase hashing
 
 ```typescript
-import { cs_mast_init_codebase } from 'cs-mast';
+import { cs_mast_init_codebase } from '@shriyanss/cs-mast';
 import { readFileSync, readdirSync } from 'fs';
 
 const jsFiles = readdirSync('./src')

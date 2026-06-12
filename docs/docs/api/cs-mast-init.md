@@ -132,7 +132,7 @@ string** to its **dotted pathKey** (e.g. `"file.program.body.0"`). Used by `cs_m
 ### Basic usage
 
 ```typescript
-import { cs_mast_init } from 'cs-mast';
+import { cs_mast_init } from '@shriyanss/cs-mast';
 
 const tree = cs_mast_init('const x = 42;', {
   hash: 'sha256', lang: 'js', prsr: '@babel/parser',
@@ -166,8 +166,8 @@ const tree = cs_mast_init(source, {
 ### Custom adapter
 
 ```typescript
-import { cs_mast_init } from 'cs-mast';
-import { BabelAdapter } from 'cs-mast';
+import { cs_mast_init } from '@shriyanss/cs-mast';
+import { BabelAdapter } from '@shriyanss/cs-mast';
 
 const adapter = new BabelAdapter({ sourceType: 'script' });
 const tree = cs_mast_init(commonJsSource, config, adapter);

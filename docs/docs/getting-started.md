@@ -9,7 +9,7 @@ sidebar_position: 2
 ## Installation
 
 ```bash
-npm install cs-mast
+npm install @shriyanss/cs-mast
 ```
 
 CS-MAST requires Node.js 18+. It ships CommonJS + TypeScript declaration files.
@@ -19,7 +19,7 @@ CS-MAST requires Node.js 18+. It ships CommonJS + TypeScript declaration files.
 ## Minimal Example
 
 ```typescript
-import { cs_mast_init, cs_mast_s_exists } from 'cs-mast';
+import { cs_mast_init, cs_mast_s_exists } from '@shriyanss/cs-mast';
 
 const tree = cs_mast_init(
   `const greet = (name) => "hello " + name;`,
@@ -50,7 +50,7 @@ Every Babel AST node gets a `cs-mast-s-hash` property attached after `cs_mast_in
 
 ```typescript
 import { parse } from '@babel/parser';
-import { cs_mast_init, CS_MAST_SIGNATURE_KEY } from 'cs-mast';
+import { cs_mast_init, CS_MAST_SIGNATURE_KEY } from '@shriyanss/cs-mast';
 
 const source = 'const x = 42;';
 const tree = cs_mast_init(source, {
@@ -82,7 +82,7 @@ console.log(numLit?.computedHash); // 64-char hex
 ## Multi-file Codebase
 
 ```typescript
-import { cs_mast_init_codebase } from 'cs-mast';
+import { cs_mast_init_codebase } from '@shriyanss/cs-mast';
 
 const result = cs_mast_init_codebase(
   [
@@ -107,7 +107,7 @@ The primary use-case in a SAST scanner: check whether a previously-fingerprinted
 pattern is present in a target codebase.
 
 ```typescript
-import { cs_mast_init, cs_mast_s_exists } from 'cs-mast';
+import { cs_mast_init, cs_mast_s_exists } from '@shriyanss/cs-mast';
 
 const KNOWN_PATTERN_SIG =
   '$v=1$hash=sha256,lang=js,prsr=-babel/parser,scat=lit_val_decl$<known-hex>';
@@ -128,7 +128,7 @@ if (cs_mast_s_exists(tree, KNOWN_PATTERN_SIG)) {
 ## Error Handling
 
 ```typescript
-import { cs_mast_init, ParseError, ConfigError } from 'cs-mast';
+import { cs_mast_init, ParseError, ConfigError } from '@shriyanss/cs-mast';
 
 try {
   const tree = cs_mast_init('const = =;', { /* ... */ });

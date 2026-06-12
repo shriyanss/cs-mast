@@ -66,7 +66,7 @@ The call does not modify `tree._signatureMap` or any node in the tree.
 ### Typical SAST use case
 
 ```typescript
-import { cs_mast_init, cs_mast_s_exists } from 'cs-mast';
+import { cs_mast_init, cs_mast_s_exists } from '@shriyanss/cs-mast';
 
 // Known signature of a dangerous pattern (fingerprinted offline)
 const TRACKING_SIG =

@@ -36,7 +36,7 @@ The following `@babel/traverse` `NodePath` methods are blocked (Table II from th
 ## Usage
 
 ```typescript
-import { guardPath, MutationError } from 'cs-mast';
+import { guardPath, MutationError } from '@shriyanss/cs-mast';
 
 // Wrap any object (typically a Babel NodePath) to block mutation
 const safePath = guardPath(babelNodePath);

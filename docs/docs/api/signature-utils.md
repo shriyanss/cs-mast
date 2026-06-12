@@ -41,7 +41,7 @@ Returns `null` when:
 ### Example
 
 ```typescript
-import { parseSignature } from 'cs-mast';
+import { parseSignature } from '@shriyanss/cs-mast';
 
 const parsed = parseSignature(
   '$v=1$hash=sha256,lang=js,lver=es6,prsr=-babel/parser,scat=lit_val$' + 'a'.repeat(64)
@@ -86,7 +86,7 @@ A valid CS-MAST-S PHC string.
 ### Example
 
 ```typescript
-import { buildSignature } from 'cs-mast';
+import { buildSignature } from '@shriyanss/cs-mast';
 
 const sig = buildSignature({
   version: 1,
@@ -127,7 +127,7 @@ automatically sanitizing the `prsr` field.
 ### Example
 
 ```typescript
-import { buildSignatureFromConfig } from 'cs-mast';
+import { buildSignatureFromConfig } from '@shriyanss/cs-mast';
 
 const sig = buildSignatureFromConfig(
   { hash: 'sha256', lang: 'js', prsr: '@babel/parser', scat: ['lit'], sinc: [] },
@@ -150,7 +150,7 @@ Applies the CS-MAST-S character-set rule to a parser name: characters outside
 ### Example
 
 ```typescript
-import { sanitizePrsr } from 'cs-mast';
+import { sanitizePrsr } from '@shriyanss/cs-mast';
 
 sanitizePrsr('@babel/parser')    // '-babel/parser'
 sanitizePrsr('tree-sitter/py')   // 'tree-sitter/py'

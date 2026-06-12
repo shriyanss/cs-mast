@@ -189,7 +189,7 @@ resolveByPath(root: AdapterNode, pathKey: string): AdapterNode | null {
 Pass your adapter instance to `cs_mast_init`:
 
 ```typescript
-import { cs_mast_init } from 'cs-mast';
+import { cs_mast_init } from '@shriyanss/cs-mast';
 import { PythonAdapter } from './my-python-adapter';
 
 const tree = cs_mast_init(pythonSource, config, new PythonAdapter());

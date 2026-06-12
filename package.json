@@ -1,5 +1,5 @@
 {
-  "name": "cs-mast",
+  "name": "@shriyanss/cs-mast",
   "version": "0.1.0",
   "description": "Context-Stratified Merkelized Abstract Syntax Tree — reference TypeScript implementation",
   "main": "./dist/index.js",
@@ -26,6 +26,9 @@
   ],
   "author": "Shriyans Sudhi",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@babel/parser": "^7.24.0",
     "@babel/traverse": "^7.24.0",
