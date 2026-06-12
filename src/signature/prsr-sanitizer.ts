@@ -6,8 +6,8 @@ const ALLOWED = /[a-zA-Z0-9/+.-]/;
  * Example: '@babel/parser' → '-babel/parser'
  */
 export function sanitizePrsr(name: string): string {
-  return name
-    .split('')
-    .map((ch) => (ALLOWED.test(ch) ? ch : '-'))
-    .join('');
+    return name
+        .split("")
+        .map((ch) => (ALLOWED.test(ch) ? ch : "-"))
+        .join("");
 }

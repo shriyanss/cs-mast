@@ -19,25 +19,22 @@ npm install @shriyanss/cs-mast
 ## Quick Start
 
 ```typescript
-import { cs_mast_init, cs_mast_s_exists } from '@shriyanss/cs-mast';
+import { cs_mast_init, cs_mast_s_exists } from "@shriyanss/cs-mast";
 
-const tree = cs_mast_init(
-  `const greet = (name) => "hello " + name;`,
-  {
-    hash: 'sha256',
-    lang: 'js',
-    lver: 'es2022',
-    prsr: '@babel/parser',
-    scat: ['lit', 'val', 'id', 'name', 'decl'],
+const tree = cs_mast_init(`const greet = (name) => "hello " + name;`, {
+    hash: "sha256",
+    lang: "js",
+    lver: "es2022",
+    prsr: "@babel/parser",
+    scat: ["lit", "val", "id", "name", "decl"],
     sinc: [],
-  }
-);
+});
 
 console.log(tree.rootSignature);
 // $v=1$hash=sha256,lang=js,lver=es2022,prsr=-babel/parser,scat=lit_val_id_name_decl$<hex>
 
 console.log(cs_mast_s_exists(tree, tree.rootSignature)); // true
-console.log(cs_mast_s_exists(tree, '$v=1$...$fake'));    // false
+console.log(cs_mast_s_exists(tree, "$v=1$...$fake")); // false
 ```
 
 ---
@@ -51,12 +48,12 @@ Babel node, and builds the O(1) signature hashmap.
 
 ```typescript
 interface CsMastTree {
-  root: AdapterNode;        // File node — every descendant has computedHash set
-  rootHash: string;         // 64-char hex of the File node
-  rootSignature: string;    // full PHC signature of root (empty if root not actively hashed)
-  config: CsMastConfig;
-  adapter: IParserAdapter;
-  readonly _signatureMap: ReadonlyMap<string, string>; // full-sig → pathKey
+    root: AdapterNode; // File node — every descendant has computedHash set
+    rootHash: string; // 64-char hex of the File node
+    rootSignature: string; // full PHC signature of root (empty if root not actively hashed)
+    config: CsMastConfig;
+    adapter: IParserAdapter;
+    readonly _signatureMap: ReadonlyMap<string, string>; // full-sig → pathKey
 }
 ```
 
@@ -70,10 +67,13 @@ Process multiple files with the same config, derive a codebase-level hash:
 
 ```typescript
 const result = cs_mast_init_codebase(
-  [{ filename: 'a.js', source: '...' }, { filename: 'b.js', source: '...' }],
-  config,
+    [
+        { filename: "a.js", source: "..." },
+        { filename: "b.js", source: "..." },
+    ],
+    config
 );
-result.codebaseHash;      // sha256(sorted([h1,h2,...]).join('')) — order-independent
+result.codebaseHash; // sha256(sorted([h1,h2,...]).join('')) — order-independent
 result.codebaseSignature; // full PHC string with codebaseHash
 ```
 
@@ -85,30 +85,30 @@ Encode and decode CS-MAST-S PHC strings. `parseSignature` returns `null` for inv
 
 ## Config (`CsMastConfig`)
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `hash` | yes | Hash algorithm. Only `'sha256'` supported. |
-| `lang` | yes | Shortest file extension, e.g. `'js'`. |
-| `lver` | no | Language version, e.g. `'es6'`, `'es2022'`. |
-| `prsr` | yes | Parser name. Characters outside `[a-zA-Z0-9/+.-]` are replaced by `-`. |
-| `scat` | yes* | Active scat category codes (see Table I below). |
-| `sinc` | yes* | Exact Babel node type names to include verbatim. |
+| Field  | Required | Description                                                            |
+| ------ | -------- | ---------------------------------------------------------------------- |
+| `hash` | yes      | Hash algorithm. Only `'sha256'` supported.                             |
+| `lang` | yes      | Shortest file extension, e.g. `'js'`.                                  |
+| `lver` | no       | Language version, e.g. `'es6'`, `'es2022'`.                            |
+| `prsr` | yes      | Parser name. Characters outside `[a-zA-Z0-9/+.-]` are replaced by `-`. |
+| `scat` | yes\*    | Active scat category codes (see Table I below).                        |
+| `sinc` | yes\*    | Exact Babel node type names to include verbatim.                       |
 
-*At least one of `scat` or `sinc` must be non-empty.
+\*At least one of `scat` or `sinc` must be non-empty.
 
 ### `scat` Categories (Table I from spec)
 
-| Code | Babel Node Types | Behaviour |
-|------|-----------------|-----------|
-| `lit` | StringLiteral, NumericLiteral, BooleanLiteral, RegExpLiteral, NullLiteral, BigIntLiteral | Hash literal type; add value if `val` also active |
-| `id` | Identifier, PrivateName, JSXIdentifier | Hash node type; add name if `name` also active |
-| `op` | Binary/Unary/Update/AssignmentExpression | Hash child hashes; add operator symbol if `op_name` active |
-| `decl` | VariableDeclaration, FunctionDeclaration, ClassDeclaration, ImportDeclaration | Include node type/kind in hash |
-| `loop` | For/While/DoWhile/ForIn/ForOfStatement | `sha256(NodeType + sortedActiveChildHashes)` |
-| `cond` | IfStatement, SwitchStatement, ConditionalExpression | Double-hash: `sha256(sha256(NodeType)+sha256(Test?)+sha256(Consequent))` |
-| `name` | Modifier — adds `.name` to identifier hashes | — |
-| `val` | Modifier — adds `.value` to literal and conditional hashes | — |
-| `op_name` | Modifier — adds `.operator` to operator hashes | — |
+| Code      | Babel Node Types                                                                         | Behaviour                                                                |
+| --------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `lit`     | StringLiteral, NumericLiteral, BooleanLiteral, RegExpLiteral, NullLiteral, BigIntLiteral | Hash literal type; add value if `val` also active                        |
+| `id`      | Identifier, PrivateName, JSXIdentifier                                                   | Hash node type; add name if `name` also active                           |
+| `op`      | Binary/Unary/Update/AssignmentExpression                                                 | Hash child hashes; add operator symbol if `op_name` active               |
+| `decl`    | VariableDeclaration, FunctionDeclaration, ClassDeclaration, ImportDeclaration            | Include node type/kind in hash                                           |
+| `loop`    | For/While/DoWhile/ForIn/ForOfStatement                                                   | `sha256(NodeType + sortedActiveChildHashes)`                             |
+| `cond`    | IfStatement, SwitchStatement, ConditionalExpression                                      | Double-hash: `sha256(sha256(NodeType)+sha256(Test?)+sha256(Consequent))` |
+| `name`    | Modifier — adds `.name` to identifier hashes                                             | —                                                                        |
+| `val`     | Modifier — adds `.value` to literal and conditional hashes                               | —                                                                        |
+| `op_name` | Modifier — adds `.operator` to operator hashes                                           | —                                                                        |
 
 ---
 

@@ -1,4 +1,4 @@
-import { MutationError } from '../errors';
+import { MutationError } from "../errors";
 
 /**
  * Methods on @babel/traverse NodePath that mutate the AST and must not be called
@@ -7,24 +7,24 @@ import { MutationError } from '../errors';
  * it is guarded only at the TypeScript type level via Readonly<>.
  */
 export const RESTRICTED_METHODS = [
-  'replaceWith',
-  'replaceWithMultiple',
-  'replaceWithSourceString',
-  'replaceInline',
-  'insertBefore',
-  'insertAfter',
-  'remove',
-  'pushContainer',
-  'unshiftContainer',
+    "replaceWith",
+    "replaceWithMultiple",
+    "replaceWithSourceString",
+    "replaceInline",
+    "insertBefore",
+    "insertAfter",
+    "remove",
+    "pushContainer",
+    "unshiftContainer",
 ] as const;
 
-export type RestrictedMethod = typeof RESTRICTED_METHODS[number];
+export type RestrictedMethod = (typeof RESTRICTED_METHODS)[number];
 
 /** Returns a function that always throws MutationError for the named method. */
 export function makeGuard(methodName: string): () => never {
-  return () => {
-    throw new MutationError(methodName);
-  };
+    return () => {
+        throw new MutationError(methodName);
+    };
 }
 
 /**
@@ -32,14 +32,14 @@ export function makeGuard(methodName: string): () => never {
  * restricted method is accessed. All other property accesses pass through.
  */
 export function guardPath<T extends object>(path: T): T {
-  const restricted = new Set<string>(RESTRICTED_METHODS);
-  return new Proxy(path, {
-    get(target, prop) {
-      if (typeof prop === 'string' && restricted.has(prop)) {
-        return makeGuard(prop);
-      }
-      const val = (target as Record<string, unknown>)[prop as string];
-      return typeof val === 'function' ? val.bind(target) : val;
-    },
-  });
+    const restricted = new Set<string>(RESTRICTED_METHODS);
+    return new Proxy(path, {
+        get(target, prop) {
+            if (typeof prop === "string" && restricted.has(prop)) {
+                return makeGuard(prop);
+            }
+            const val = (target as Record<string, unknown>)[prop as string];
+            return typeof val === "function" ? val.bind(target) : val;
+        },
+    });
 }
