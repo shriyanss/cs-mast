@@ -9,7 +9,7 @@
  * A6: VariableDeclarator always prefixes "VariableDeclarator" regardless of decl flag.
  * A7: Conditional double-hash — inner Hash(NodeType) and Hash(Test) before outer hash.
  */
-import type { AdapterNode } from '../types/node-descriptor';
+import type { AdapterNode } from "../types/node-descriptor";
 
 /**
  * Returns the normalized literal value string for hash-input construction.
@@ -24,31 +24,31 @@ import type { AdapterNode } from '../types/node-descriptor';
  * - StringLiteral  → node.value (parsed Unicode, NOT the quoted JS form)
  */
 export function literalValueString(node: AdapterNode): string {
-  switch (node.nodeType) {
-    case 'NullLiteral':
-      return 'null';
-    case 'BooleanLiteral':
-      return node.value === 'true' ? 'true' : 'false';
-    default:
-      return node.value ?? '';
-  }
+    switch (node.nodeType) {
+        case "NullLiteral":
+            return "null";
+        case "BooleanLiteral":
+            return node.value === "true" ? "true" : "false";
+        default:
+            return node.value ?? "";
+    }
 }
 
 /** Gets the computed hash of a child node, returning '' if not yet computed. */
 export function childHash(node: AdapterNode | undefined | null): string {
-  return node?.computedHash ?? '';
+    return node?.computedHash ?? "";
 }
 
 /** Gets the computed hash of a named ref child. */
 export function refHash(node: AdapterNode, key: string): string {
-  const child = node.refs[key];
-  if (!child || Array.isArray(child)) return '';
-  return childHash(child);
+    const child = node.refs[key];
+    if (!child || Array.isArray(child)) return "";
+    return childHash(child);
 }
 
 /** Concatenates computed hashes of a named ref array in source order. */
 export function refArrayHashes(node: AdapterNode, key: string): string {
-  const children = node.refs[key];
-  if (!Array.isArray(children)) return '';
-  return children.map((c) => c.computedHash ?? '').join('');
+    const children = node.refs[key];
+    if (!Array.isArray(children)) return "";
+    return children.map((c) => c.computedHash ?? "").join("");
 }
