@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.1.2 - 2026-06-12
+
+### Fixed
+
+- Remove untrusted PR data from branch-checker CI comment body to prevent injection
+
 ## 0.1.1 - 2026-06-12
 
 ### Changed
