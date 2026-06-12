@@ -1,5 +1,9 @@
 # CS-MAST
 
+<p align="center">
+  <img src="docs/static/img/cs-mast-logo-plain-bg.png" alt="CS-MAST Logo" width="200" />
+</p>
+
 **Context-Stratified Merkelized Abstract Syntax Tree** — reference TypeScript implementation.
 
 CS-MAST extends an AST with Merkle-style cryptographic signatures (CS-MAST-S) on every node,

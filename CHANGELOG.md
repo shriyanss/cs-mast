@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.1.3 - 2026-06-12
+
+### Changed
+
+- Replace favicon with logo-derived ICO (16/32/48px) generated from cs-mast-logo-plain-bg.png
+- Update Docusaurus navbar logo to use cs-mast-logo-plain-bg.png
+- Add logo to README
+
 ## 0.1.2 - 2026-06-12
 
 ### Fixed
