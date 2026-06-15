@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.1.5 - 2026-06-16
+
+### Added
+
+- Dynamically generated `robots.txt` and `sitemap.xml` in the docs site
+
 ## 0.1.4 - 2026-06-15
 
 ### Added
