@@ -25,6 +25,8 @@ for (let i = 0; i < 3; i++) {
 }
 `;
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+
 function getSignature(node: AdapterNode): string {
   const raw = node._raw as Record<string, unknown> | undefined;
   if (raw && typeof raw['cs-mast-s-hash'] === 'string') {
@@ -33,23 +35,76 @@ function getSignature(node: AdapterNode): string {
   return '';
 }
 
+function getRawRange(node: AdapterNode): { start: number; end: number } | null {
+  const raw = node._raw as { start?: number; end?: number } | undefined;
+  if (raw && raw.start !== undefined && raw.end !== undefined) {
+    return { start: raw.start, end: raw.end };
+  }
+  return null;
+}
+
+/**
+ * Find the most specific (deepest) AdapterNode whose source range fully
+ * contains [selStart, selEnd]. For a cursor (no selection), selStart === selEnd.
+ */
+function findNodeAtOffset(
+  node: AdapterNode,
+  selStart: number,
+  selEnd: number,
+): AdapterNode | null {
+  const range = getRawRange(node);
+  if (!range) return null;
+  // Skip nodes that don't contain the selection at all
+  if (range.end < selStart || range.start > selEnd) return null;
+
+  // Try children first (deeper = more specific)
+  for (const child of node.children) {
+    const found = findNodeAtOffset(child, selStart, selEnd);
+    if (found) return found;
+  }
+
+  // This node contains the selection; return it if the selection fits
+  if (range.start <= selStart && range.end >= selEnd) return node;
+  return null;
+}
+
 function hasActiveDescendant(node: AdapterNode): boolean {
   if (node.isActivelyHashed) return true;
   return node.children.some(hasActiveDescendant);
 }
 
+// ── TreeNode ─────────────────────────────────────────────────────────────────
+
 interface TreeNodeProps {
   node: AdapterNode;
   depth: number;
   hideInactive: boolean;
+  selectedPathKey: string | null;
 }
 
-function TreeNode({ node, depth, hideInactive }: TreeNodeProps) {
+function TreeNode({ node, depth, hideInactive, selectedPathKey }: TreeNodeProps) {
   const [expanded, setExpanded] = useState(depth < 2);
   const [copied, setCopied] = useState(false);
+  const nodeRef = useRef<HTMLDivElement>(null);
+
   const hasChildren = node.children.length > 0;
   const isActive = !!node.isActivelyHashed;
   const sig = getSignature(node);
+
+  const isSelected = selectedPathKey === node.pathKey;
+  // Auto-expand when a descendant is selected
+  const isAncestorOfSelected =
+    selectedPathKey !== null &&
+    selectedPathKey !== node.pathKey &&
+    selectedPathKey.startsWith(node.pathKey + '.');
+  const shouldExpand = expanded || isAncestorOfSelected;
+
+  // Scroll selected node into view
+  useEffect(() => {
+    if (isSelected && nodeRef.current) {
+      nodeRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [isSelected]);
 
   if (hideInactive && !isActive && !hasActiveDescendant(node)) {
     return null;
@@ -66,10 +121,18 @@ function TreeNode({ node, depth, hideInactive }: TreeNodeProps) {
     });
   };
 
+  const headerClass = [
+    styles.treeNodeHeader,
+    isSelected ? styles.treeNodeSelected : '',
+    !isActive ? styles.treeNodeDimmed : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className={styles.treeNode}>
+    <div className={styles.treeNode} ref={nodeRef}>
       <div
-        className={styles.treeNodeHeader}
+        className={headerClass}
         onClick={() => hasChildren && setExpanded((e) => !e)}
         role={hasChildren ? 'button' : undefined}
         tabIndex={hasChildren ? 0 : undefined}
@@ -80,7 +143,7 @@ function TreeNode({ node, depth, hideInactive }: TreeNodeProps) {
         }}
       >
         <span className={styles.treeToggle}>
-          {hasChildren ? (expanded ? '▼' : '▶') : '·'}
+          {hasChildren ? (shouldExpand ? '▼' : '▶') : '·'}
         </span>
         <span className={styles.treeNodeType}>{node.nodeType}</span>
         {isActive && <span className={styles.activeHashBadge}>hashed</span>}
@@ -120,21 +183,31 @@ function TreeNode({ node, depth, hideInactive }: TreeNodeProps) {
           )}
         </span>
       </div>
-      {(expanded || !hasChildren) && isActive && sig && (
+      {(shouldExpand || !hasChildren) && isActive && sig && (
         <div style={{ paddingLeft: 34, marginBottom: 4 }}>
           <span className={styles.sigPill}>{sig}</span>
         </div>
       )}
-      {expanded && hasChildren && (
+      {shouldExpand && hasChildren && (
         <div className={styles.treeChildren}>
           {node.children.map((child, i) => (
-            <TreeNode key={i} node={child} depth={depth + 1} hideInactive={hideInactive} />
+            <TreeNode
+              key={i}
+              node={child}
+              depth={depth + 1}
+              hideInactive={hideInactive}
+              selectedPathKey={selectedPathKey}
+            />
           ))}
         </div>
       )}
     </div>
   );
 }
+
+// ── PlaygroundInner ──────────────────────────────────────────────────────────
+
+type MonacoEditor = import('monaco-editor').editor.IStandaloneCodeEditor;
 
 function PlaygroundInner() {
   const { colorMode } = useColorMode();
@@ -151,14 +224,16 @@ function PlaygroundInner() {
   const [tree, setTree] = useState<AdapterNode | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
   const [hideInactive, setHideInactive] = useState(false);
+  const [selectedPathKey, setSelectedPathKey] = useState<string | null>(null);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Dynamic import resolves Rspack's getter-based re-export proxy correctly.
   const csMastInitRef = useRef<CsMastInitFn | null>(null);
+  const editorRef = useRef<MonacoEditor | null>(null);
+  const treeRef = useRef<AdapterNode | null>(null);
 
   useEffect(() => {
     import('@shriyanss/cs-mast').then((mod) => {
       csMastInitRef.current = mod.cs_mast_init;
-      // Trigger initial parse now that the module is loaded.
       reparse();
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -175,6 +250,7 @@ function PlaygroundInner() {
     if (scat.length === 0 && sincArr.length === 0) {
       setParseError('Select at least one scat category or enter a sinc node type.');
       setTree(null);
+      treeRef.current = null;
       return;
     }
 
@@ -191,10 +267,12 @@ function PlaygroundInner() {
     try {
       const result = csMastInitRef.current(code, config);
       setTree(result.root);
+      treeRef.current = result.root;
       setParseError(null);
     } catch (e: unknown) {
       setParseError(e instanceof Error ? e.message : String(e));
       setTree(null);
+      treeRef.current = null;
     }
   }, [code, scat, sinc, lang, lver, prsr, sourceType]);
 
@@ -205,6 +283,28 @@ function PlaygroundInner() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [reparse]);
+
+  const handleEditorMount = useCallback((editor: MonacoEditor) => {
+    editorRef.current = editor;
+
+    editor.onDidChangeCursorSelection((e) => {
+      const model = editor.getModel();
+      if (!model || !treeRef.current) return;
+
+      const sel = e.selection;
+      const selStart = model.getOffsetAt({
+        lineNumber: sel.startLineNumber,
+        column: sel.startColumn,
+      });
+      const selEnd = model.getOffsetAt({
+        lineNumber: sel.endLineNumber,
+        column: sel.endColumn,
+      });
+
+      const found = findNodeAtOffset(treeRef.current, selStart, selEnd);
+      setSelectedPathKey(found ? found.pathKey : null);
+    });
+  }, []);
 
   const toggleScat = (cat: ScatCategory) => {
     setScat((prev) =>
@@ -292,6 +392,7 @@ function PlaygroundInner() {
             defaultLanguage="javascript"
             value={code}
             onChange={(val) => setCode(val ?? '')}
+            onMount={handleEditorMount}
             theme={colorMode === 'dark' ? 'vs-dark' : 'vs'}
             options={{
               minimap: { enabled: false },
@@ -317,7 +418,12 @@ function PlaygroundInner() {
           {parseError ? (
             <div className={styles.treeError}>{parseError}</div>
           ) : tree ? (
-            <TreeNode node={tree} depth={0} hideInactive={hideInactive} />
+            <TreeNode
+              node={tree}
+              depth={0}
+              hideInactive={hideInactive}
+              selectedPathKey={selectedPathKey}
+            />
           ) : (
             <div className={styles.treeEmpty}>
               Type some JavaScript to see the CS-MAST tree.
@@ -328,6 +434,8 @@ function PlaygroundInner() {
     </div>
   );
 }
+
+// ── Page entry point ─────────────────────────────────────────────────────────
 
 export default function Playground(): React.ReactElement {
   return (

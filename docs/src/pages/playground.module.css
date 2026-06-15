@@ -145,6 +145,22 @@
   background: var(--ifm-color-emphasis-100);
 }
 
+.treeNodeSelected {
+  background: rgba(251, 146, 60, 0.12) !important;
+  border-radius: 4px;
+  outline: 1.5px solid rgba(251, 146, 60, 0.6);
+  outline-offset: -1px;
+}
+
+[data-theme='dark'] .treeNodeSelected {
+  background: rgba(251, 146, 60, 0.15) !important;
+  outline-color: rgba(251, 146, 60, 0.75);
+}
+
+.treeNodeDimmed {
+  opacity: 0.4;
+}
+
 .treeToggle {
   flex-shrink: 0;
   width: 14px;
