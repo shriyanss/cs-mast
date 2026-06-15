@@ -66,6 +66,11 @@ const config: Config = {
           label: 'API Reference',
         },
         {
+          to: '/playground',
+          label: 'Playground',
+          position: 'left',
+        },
+        {
           href: 'https://github.com/shriyanss/cs-mast',
           label: 'GitHub',
           position: 'right',
