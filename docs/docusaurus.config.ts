@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { themes as prismThemes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
@@ -38,8 +40,31 @@ const config: Config = {
         theme: {
           customCss: './src/css/custom.css',
         },
+        sitemap: {
+          lastmod: 'date',
+          changefreq: 'weekly',
+          priority: 0.5,
+          filename: 'sitemap.xml',
+        },
       } satisfies Preset.Options,
     ],
+  ],
+
+  plugins: [
+    function robotsTxtPlugin(context: { siteConfig: { url: string } }) {
+      return {
+        name: 'robots-txt-plugin',
+        async postBuild({ outDir }: { outDir: string }) {
+          const content = [
+            'User-agent: *',
+            'Allow: /',
+            '',
+            `Sitemap: ${context.siteConfig.url}/sitemap.xml`,
+          ].join('\n');
+          fs.writeFileSync(path.join(outDir, 'robots.txt'), content);
+        },
+      };
+    },
   ],
 
   themeConfig: {
