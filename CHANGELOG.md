@@ -1,5 +1,18 @@
 # Change Log
 
+## 0.1.4 - 2026-06-15
+
+### Added
+
+- Replace `node:crypto` with `@noble/hashes` for isomorphic SHA-256, making the library browser-compatible
+- Interactive CS-MAST Playground at `/playground` in the docs site:
+    - Monaco code editor (left) with live CS-MAST tree viewer (right)
+    - Settings bar for `scat`, `sinc`, `lang`, `lver`, `prsr`, `sourceType`
+    - Full 64-char hash shown per node; click hash copies PHC signature to clipboard
+    - Cursor/text-selection in editor highlights the corresponding AST node
+    - Inactive nodes (not in active scat/sinc) dimmed at 40% opacity
+    - "Hide inactive nodes" toggle to filter tree to hashed nodes only
+
 ## 0.1.3 - 2026-06-12
 
 ### Changed

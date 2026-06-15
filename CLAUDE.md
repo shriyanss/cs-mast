@@ -144,6 +144,11 @@ Branch strategy: `main` (locked, only `dev` merges in) → `dev` → feature bra
 
 5. **Wait for all checks to pass**, then **merge**:
 
+    Required checks on every PR:
+    - `check-branch` (PR Branch Checker workflow) — verifies source branch is `dev`
+    - `Build & Prettify Code` (build-and-prettify workflow) — version_check → audit → prettier → build → test
+    - **Vercel** deployment preview — docs site must build successfully on Vercel
+
     ```bash
     gh pr merge <PR_NUMBER> --merge
     ```
