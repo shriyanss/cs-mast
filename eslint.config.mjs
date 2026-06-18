@@ -11,6 +11,9 @@ export default [
     {
         files: ["src/**/*.ts", "tests/**/*.ts"],
         languageOptions: {
+            globals: {
+                ...globals.node,
+            },
             parser: tsParser,
             parserOptions: {
                 project: "./tsconfig.json",

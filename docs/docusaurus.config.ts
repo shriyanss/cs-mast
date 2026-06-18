@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { themes as prismThemes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
@@ -38,8 +40,46 @@ const config: Config = {
         theme: {
           customCss: './src/css/custom.css',
         },
+        sitemap: {
+          lastmod: 'date',
+          changefreq: 'weekly',
+          priority: 0.5,
+          filename: 'sitemap.xml',
+        },
       } satisfies Preset.Options,
     ],
+  ],
+
+  plugins: [
+    function cryptoFallbackPlugin() {
+      return {
+        name: 'crypto-fallback-plugin',
+        // crypto is a Node.js built-in used only in the Node.js path of @shriyanss/cs-mast.
+        // Tell the bundler not to provide a browser fallback — the isNode guard prevents
+        // this code from ever executing in a browser context.
+        configureWebpack() {
+          return {
+            resolve: {
+              fallback: { crypto: false },
+            },
+          };
+        },
+      };
+    },
+    function robotsTxtPlugin(context: { siteConfig: { url: string } }) {
+      return {
+        name: 'robots-txt-plugin',
+        async postBuild({ outDir }: { outDir: string }) {
+          const content = [
+            'User-agent: *',
+            'Allow: /',
+            '',
+            `Sitemap: ${context.siteConfig.url}/sitemap.xml`,
+          ].join('\n');
+          fs.writeFileSync(path.join(outDir, 'robots.txt'), content);
+        },
+      };
+    },
   ],
 
   themeConfig: {
