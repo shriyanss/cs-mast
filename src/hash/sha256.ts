@@ -1,9 +1,7 @@
 import { sha256 as nobleSha256 } from "@noble/hashes/sha256";
 import { bytesToHex } from "@noble/hashes/utils";
 
-const isNode =
-    typeof process !== "undefined" &&
-    typeof process.versions?.node === "string";
+const isNode = typeof process !== "undefined" && typeof process.versions?.node === "string";
 
 /** Returns the SHA-256 digest of input (UTF-8 encoded) as a 64-char lowercase hex string. */
 export function sha256(input: string): string {
