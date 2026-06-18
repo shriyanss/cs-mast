@@ -51,6 +51,21 @@ const config: Config = {
   ],
 
   plugins: [
+    function cryptoFallbackPlugin() {
+      return {
+        name: 'crypto-fallback-plugin',
+        // crypto is a Node.js built-in used only in the Node.js path of @shriyanss/cs-mast.
+        // Tell the bundler not to provide a browser fallback — the isNode guard prevents
+        // this code from ever executing in a browser context.
+        configureWebpack() {
+          return {
+            resolve: {
+              fallback: { crypto: false },
+            },
+          };
+        },
+      };
+    },
     function robotsTxtPlugin(context: { siteConfig: { url: string } }) {
       return {
         name: 'robots-txt-plugin',
