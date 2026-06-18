@@ -10,7 +10,7 @@ export function sha256(input: string): string {
     const bytes = new TextEncoder().encode(input);
     if (isNode) {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { createHash } = require("crypto") as typeof import("crypto");
+        const { createHash } = require(/* webpackIgnore: true */ "crypto") as typeof import("crypto");
         return createHash("sha256").update(bytes).digest("hex");
     }
     return bytesToHex(nobleSha256(bytes));
