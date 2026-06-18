@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.1.6 - 2026-06-18
+
+### Changed
+
+- Use Node.js built-in `crypto.createHash('sha256')` when running in Node.js for faster hashing; fall back to `@noble/hashes/sha256` in browser environments
+
 ## 0.1.5 - 2026-06-16
 
 ### Added
