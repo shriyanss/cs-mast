@@ -93,14 +93,13 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
-      - name: Merge main into dev
+      - name: Reset dev to match main
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git fetch origin main:main
-          git fetch origin dev:dev
+          git fetch origin main
           git checkout dev
-          git merge --no-ff -m "chore: merge changes after release $VERSION" main -X theirs || (git status && git diff && exit 0)
-          git push origin dev
+          git reset --hard origin/main
+          git push --force-with-lease origin dev
         env:
           VERSION: ${{ github.event.release.tag_name }}
