@@ -205,9 +205,7 @@ function hashConditional(node: AdapterNode, r: ResolvedConfig): string {
  * sort) because child position is semantically meaningful in generic node types.
  */
 function hashSincNode(node: AdapterNode): string {
-    const activeHashes = node.children
-        .filter((c) => c.isActivelyHashed === true)
-        .map((c) => c.computedHash as string);
+    const activeHashes = node.children.filter((c) => c.isActivelyHashed === true).map((c) => c.computedHash as string);
     return sha256(node.nodeType + activeHashes.join(""));
 }
 
