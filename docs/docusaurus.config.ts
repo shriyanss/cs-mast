@@ -66,6 +66,24 @@ const config: Config = {
         },
       };
     },
+    function csMastDevSourcePlugin() {
+      return {
+        name: 'cs-mast-dev-source-plugin',
+        // In development (npm start), alias @shriyanss/cs-mast directly to the local
+        // TypeScript source so edits to src/ are picked up immediately without a build step.
+        // In production (npm run build), the alias is omitted and the published dist/ is used.
+        configureWebpack() {
+          if (process.env.NODE_ENV !== 'development') return {};
+          return {
+            resolve: {
+              alias: {
+                '@shriyanss/cs-mast': path.resolve(__dirname, '../src/index.ts'),
+              },
+            },
+          };
+        },
+      };
+    },
     function robotsTxtPlugin(context: { siteConfig: { url: string } }) {
       return {
         name: 'robots-txt-plugin',

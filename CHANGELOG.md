@@ -1,5 +1,19 @@
 # Change Log
 
+## 0.1.7 - 2026-06-25
+
+### Fixed
+
+- Fix sinc-only node hash incorrectly including inactive child hashes: `hashSincNode()` now filters to only `isActivelyHashed` children in source order (A12), so e.g. `ObjectProperty` in sinc hashes to `sha256("ObjectProperty")` regardless of value type when no scat categories are active
+
+### Added
+
+- Docs dev mode: when running `npm start` in `docs/`, webpack now aliases `@shriyanss/cs-mast` directly to the local TypeScript source so playground changes are reflected immediately without a build step
+
+### Docs
+
+- Document new assumption A12 — sinc node hash formula — in `design-decisions.md` and `CLAUDE.md`
+
 ## 0.1.6 - 2026-06-18
 
 ### Changed

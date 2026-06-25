@@ -163,6 +163,38 @@ not find them. Their hashes propagate upward silently.
 
 ---
 
+## A12 — sinc Node Hash Formula
+
+The spec (§IV-B3 "Visiting a node in sinc") states only that "a similar methodology as
+the above method can be applied." It does not provide an explicit formula.
+
+**Assumption:** A sinc-only node's hash includes only the hashes of its **directly active
+children** (`isActivelyHashed === true`), in **source order**. If no children are active,
+the hash collapses to `sha256(nodeType)`.
+
+```
+sha256(nodeType + concat(child.computedHash for child in children if child.isActivelyHashed))
+```
+
+**Rationale:**
+
+- The loop formula (eq23) is the closest precedent: it filters children to only those
+  present in the configuration before hashing. sinc nodes follow the same filter rule.
+- Unlike loops (which sort child hashes ASCII-ascending because iteration order is
+  semantically irrelevant), **source order is preserved** for sinc nodes because child
+  position is semantically meaningful in most node types (e.g. `ObjectProperty`: key
+  always precedes value).
+- This means enabling `ObjectProperty` in sinc without any scat categories produces
+  `sha256("ObjectProperty")` for every ObjectProperty node — the value type does not
+  leak into the hash, matching the principle that only configured elements are considered.
+
+**Distinguishing from A11:** A11 (default formula) includes ALL children's hashes to
+ensure uncategorized nodes propagate Merkle state correctly to their parents. A12 (sinc
+formula) intentionally excludes inactive children because a sinc node is an active
+fingerprinting target, not a transparent relay.
+
+---
+
 ## Declaration Nodes — Always Apply Formula
 
 **Additional decision (not explicitly numbered in the plan):** Declaration node types

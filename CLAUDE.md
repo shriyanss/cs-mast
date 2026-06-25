@@ -70,7 +70,7 @@ src/
 
 ---
 
-## Documented Assumptions (A1–A11)
+## Documented Assumptions (A1–A12)
 
 These decisions are encoded in `src/hash/hash-input-builder.ts` and `src/hash/hash-formulas.ts`.
 
@@ -87,6 +87,7 @@ These decisions are encoded in `src/hash/hash-input-builder.ts` and `src/hash/ha
 | A9  | Loop child sort: sort the 64-char hex hash strings ASCII-ascending (not by node type).                                                                                                                                                                                                                                 |
 | A10 | sinc deduplication: scat-covered types win. `resolveConfig()` computes scat-covered types first; sinc entries overlapping with scat are silently dropped.                                                                                                                                                              |
 | A11 | Uncategorized nodes (not in any scat/sinc): default formula `sha256(nodeType + concat(children.computedHash))`. This ensures every node has a valid hash for parent formulas (Merkle propagation). Uncategorized nodes are NOT added to the signatureMap.                                                              |
+| A12 | **sinc node hash formula:** `sha256(nodeType + concat(activeChild.computedHash in source order))` — only children with `isActivelyHashed===true` are included. Source order preserved (unlike loops which sort). Collapses to `sha256(nodeType)` when no children are active. Inactive child types do not leak into the hash. |
 
 **Special rule for declaration nodes:** `VariableDeclaration`, `FunctionDeclaration`, `ClassDeclaration`, `ImportDeclaration` always use their specific formulas (eq8–18). The `decl` scat flag is a _variant selector_ (controls whether NodeType is included), not a gate. This differs from loops/conditionals where the category flag is a gate.
 

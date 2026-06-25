@@ -199,11 +199,16 @@ function hashConditional(node: AdapterNode, r: ResolvedConfig): string {
 // ─── sinc-only formula ────────────────────────────────────────────────────────
 
 /**
- * sinc nodes use the same default Merkle propagation: sha256(nodeType + childHashes).
- * They are separately tracked as isActivelyHashed (per A10 dedup at resolveConfig time).
+ * A12: sha256(nodeType + concat of actively-hashed direct children in source order).
+ * Only children with isActivelyHashed===true are included. If none are active the
+ * hash collapses to sha256(nodeType). Source order is preserved (unlike loops which
+ * sort) because child position is semantically meaningful in generic node types.
  */
 function hashSincNode(node: AdapterNode): string {
-    return computeDefaultHash(node);
+    const activeHashes = node.children
+        .filter((c) => c.isActivelyHashed === true)
+        .map((c) => c.computedHash as string);
+    return sha256(node.nodeType + activeHashes.join(""));
 }
 
 // ─── Default formula (A11) ────────────────────────────────────────────────────
