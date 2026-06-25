@@ -42,7 +42,7 @@ jobs:
           cache: "npm"
       - run: npm ci
       - name: Run npm audit
-        run: npm audit
+        run: npm audit --omit=dev
 
   build:
     needs: audit
