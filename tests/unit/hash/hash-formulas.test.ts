@@ -190,7 +190,7 @@ describe("Declaration formulas", () => {
         expect(letH).not.toBe(constH); // URR collision prevention
     });
 
-    it("eq9: VariableDeclaration without decl → only ChildHashes (no NodeType, no Kind)", () => {
+    it("VariableDeclaration transparent when decl not in scat → sha256(child hashes)", () => {
         const decl1 = node({ nodeType: "VariableDeclarator", computedHash: "hhh" });
         const n = node({
             nodeType: "VariableDeclaration",
@@ -199,10 +199,11 @@ describe("Declaration formulas", () => {
             refs: { declarations: [decl1] },
         });
         const r = resolveConfig(cfg({ scat: ["lit"] })); // decl not in scat
+        // Transparent passthrough: sha256(child hashes) — no NodeType or Kind
         expect(computeNodeHash(n, r)).toBe(sha256("hhh"));
     });
 
-    it("eq10/11: VariableDeclarator always includes NodeType", () => {
+    it("eq10/11: VariableDeclarator uses NodeType formula when decl is in scat", () => {
         const idN = node({ nodeType: "Identifier", computedHash: "idhash" });
         const initN = node({ nodeType: "NumericLiteral", computedHash: "inithash" });
 
@@ -216,10 +217,21 @@ describe("Declaration formulas", () => {
             children: [idN],
             refs: { id: idN },
         });
-        const r = resolveConfig(cfg({ scat: [] as never[], sinc: ["VariableDeclarator"] }));
+        const r = resolveConfig(cfg({ scat: ["decl"] }));
 
         expect(computeNodeHash(withInit, r)).toBe(sha256("VariableDeclarator" + "idhash" + "inithash"));
         expect(computeNodeHash(withoutInit, r)).toBe(sha256("VariableDeclarator" + "idhash"));
+    });
+
+    it("VariableDeclarator is transparent (undefined) when decl not in scat and not in sinc", () => {
+        const idN = node({ nodeType: "Identifier", computedHash: undefined });
+        const n = node({
+            nodeType: "VariableDeclarator",
+            children: [idN],
+            refs: { id: idN },
+        });
+        const r = resolveConfig(cfg({ scat: ["lit"] })); // decl not in scat
+        expect(computeNodeHash(n, r)).toBeUndefined();
     });
 
     it("eq12: FunctionDeclaration with decl → includes NodeType", () => {
@@ -235,7 +247,7 @@ describe("Declaration formulas", () => {
         expect(computeNodeHash(n, r)).toBe(sha256("FunctionDeclaration" + "idhash" + "paramhash" + "bodyhash"));
     });
 
-    it("eq13: FunctionDeclaration without decl → no NodeType prefix", () => {
+    it("FunctionDeclaration transparent when decl not in scat → sha256(child hashes, no NodeType)", () => {
         const idN = node({ computedHash: "idhash" });
         const param = node({ computedHash: "paramhash" });
         const body = node({ computedHash: "bodyhash" });
@@ -245,11 +257,8 @@ describe("Declaration formulas", () => {
             refs: { id: idN, params: [param], body },
         });
         const r = resolveConfig(cfg({ scat: ["lit"] })); // decl not in scat
+        // Transparent passthrough: sha256(all children hashes) — no NodeType
         expect(computeNodeHash(n, r)).toBe(sha256("idhash" + "paramhash" + "bodyhash"));
-        // eq12 and eq13 DIFFER — the NodeType is excluded when decl absent
-        expect(sha256("idhash" + "paramhash" + "bodyhash")).not.toBe(
-            sha256("FunctionDeclaration" + "idhash" + "paramhash" + "bodyhash")
-        );
     });
 
     it("eq14/15: ClassDeclaration with/without superClass", () => {
@@ -273,7 +282,7 @@ describe("Declaration formulas", () => {
         expect(computeNodeHash(noSuper, r)).toBe(sha256("ClassDeclaration" + "idh" + "bodyh"));
     });
 
-    it("eq16: ClassDeclaration without decl → Hash(IdHash + BodyHash) — no NodeType", () => {
+    it("ClassDeclaration transparent when decl not in scat → sha256(child hashes, no NodeType)", () => {
         const idN = node({ computedHash: "idh" });
         const body = node({ computedHash: "bodyh" });
         const n = node({
@@ -282,6 +291,7 @@ describe("Declaration formulas", () => {
             refs: { id: idN, body },
         });
         const r = resolveConfig(cfg({ scat: ["lit"] }));
+        // Transparent passthrough: sha256(child hashes) — no NodeType
         expect(computeNodeHash(n, r)).toBe(sha256("idh" + "bodyh"));
     });
 });
@@ -383,17 +393,46 @@ describe("sinc deduplication (A10)", () => {
     });
 });
 
-// ─── Default hash ─────────────────────────────────────────────────────────────
+// ─── Default hash (transparent passthrough, A11) ──────────────────────────────
 
-describe("Default hash (uncategorized nodes)", () => {
-    it("sha256(nodeType + childHashes)", () => {
+describe("Default hash — transparent passthrough (A11)", () => {
+    it("single child with hash → sha256(childHash)", () => {
         const child = node({ nodeType: "X", computedHash: "childH" });
         const parent = node({ nodeType: "BlockStatement", children: [child] });
-        expect(computeDefaultHash(parent)).toBe(sha256("BlockStatement" + "childH"));
+        expect(computeDefaultHash(parent)).toBe(sha256("childH"));
     });
 
-    it("Leaf with no children: sha256(nodeType)", () => {
+    it("multiple children with hashes → sha256(concat in source order)", () => {
+        const c1 = node({ nodeType: "X", computedHash: "hash1" });
+        const c2 = node({ nodeType: "Y", computedHash: "hash2" });
+        const parent = node({ nodeType: "BlockStatement", children: [c1, c2] });
+        expect(computeDefaultHash(parent)).toBe(sha256("hash1" + "hash2"));
+    });
+
+    it("leaf with no children → undefined", () => {
         const n = node({ nodeType: "BreakStatement", children: [] });
-        expect(computeDefaultHash(n)).toBe(sha256("BreakStatement"));
+        expect(computeDefaultHash(n)).toBeUndefined();
+    });
+
+    it("all children have undefined computedHash → undefined", () => {
+        const c1 = node({ nodeType: "X", computedHash: undefined });
+        const c2 = node({ nodeType: "Y", computedHash: undefined });
+        const parent = node({ nodeType: "BlockStatement", children: [c1, c2] });
+        expect(computeDefaultHash(parent)).toBeUndefined();
+    });
+
+    it("mix of defined and undefined child hashes → only defined ones included", () => {
+        const active = node({ nodeType: "X", computedHash: "activeH" });
+        const inactive = node({ nodeType: "Y", computedHash: undefined });
+        const parent = node({ nodeType: "BlockStatement", children: [active, inactive] });
+        expect(computeDefaultHash(parent)).toBe(sha256("activeH"));
+    });
+
+    it("nodeType is NOT included in the hash (transparent — no type contribution)", () => {
+        const child = node({ nodeType: "X", computedHash: "childH" });
+        const p1 = node({ nodeType: "BlockStatement", children: [child] });
+        const p2 = node({ nodeType: "SomeOtherNode", children: [child] });
+        // Both uncategorized parents with same child produce the same hash
+        expect(computeDefaultHash(p1)).toBe(computeDefaultHash(p2));
     });
 });

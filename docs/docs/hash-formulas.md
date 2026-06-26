@@ -6,9 +6,11 @@ sidebar_position: 6
 
 # Hash Formulas
 
-Every node in the CS-MAST traversal receives a `computedHash` — a 64-character lowercase
-SHA-256 hexadecimal string. This page documents all 21 equations from the spec and the
-default propagation formula for uncategorized nodes.
+Every actively-configured node in the CS-MAST traversal receives a `computedHash` — a
+64-character lowercase SHA-256 hexadecimal string. Nodes not covered by any active scat
+category or sinc entry receive a `computedHash` only if at least one descendant is
+configured; otherwise `computedHash` is `undefined`. This page documents all 21 equations
+from the spec and the transparent passthrough formula for uncategorized nodes.
 
 All inputs are UTF-8 strings fed to SHA-256. The `+` operator means **direct concatenation
 with no separator** (spec assumption A1).
@@ -90,10 +92,10 @@ sha256(ArgumentHash)                   # without op_name
 
 ## Declaration Formulas
 
-:::info Always Applied
-Declaration node types always use their specific formulas regardless of whether `decl` is in
-`scat`. The `decl` flag controls the **variant** (with or without `NodeType`), not whether
-the formula runs.
+:::info Gated on `decl`
+Declaration node types use their specific formulas **only when `decl` is in `scat`**. When
+`decl` is absent, declaration nodes are treated as uncategorized and follow the transparent
+passthrough rule. See [Design Decisions A6 and A11](./design-decisions) for details.
 :::
 
 ### VariableDeclarator (eq 10 & 11)
@@ -226,17 +228,28 @@ The `alternate` branch (else/default) is **not included** in the hash per the sp
 
 ---
 
-## Default Formula (Uncategorized Nodes)
+## Default Formula — Transparent Passthrough (A11)
 
-For any node type not in any active category and not in `sinc`:
+For any node type not covered by any active scat category and not in `sinc` (including
+declaration types when `decl` is absent):
 
 ```
-sha256(NodeType + concat(child.computedHash for child in children))
+sha256(concat(child.computedHash for child in children if child.computedHash is not undefined))
 ```
 
-This is the standard Merkle propagation. It ensures every node can provide a valid hash to
-its parent's formula — for example, a `BlockStatement` (not in any scat category) still
-propagates its children's hashes upward so a `FunctionDeclaration` can use `BodyHash`.
+**If no children have a hash, `computedHash` is `undefined`.** The node's own type does
+not contribute — it is transparent.
+
+| Children with hashes | Result |
+|---------------------|--------|
+| None | `computedHash = undefined` |
+| One or more | `sha256(their hashes concatenated in source order)` |
+
+This means:
+- A leaf node (e.g. `BreakStatement`) that is not in any configured category produces no hash.
+- If no configured node types exist anywhere in the file, `rootHash` is `""` (empty string).
+- Two files that differ only in unconfigured scaffolding but contain the same configured
+  subtrees will produce the same root hash.
 
 Uncategorized nodes are **not added to the signature hashmap** — `cs_mast_s_exists` will
 not find them.

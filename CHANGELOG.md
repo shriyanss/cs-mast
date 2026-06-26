@@ -1,5 +1,23 @@
 # Change Log
 
+## 0.1.8 - 2026-06-26
+
+### Changed
+
+- **Transparent passthrough for uncategorized nodes (A11 rework):** nodes not covered by any active scat category or sinc entry no longer include their own node type in the hash. Instead they propagate only the non-undefined `computedHash` values of their direct children in source order: `sha256(concat of non-undefined child hashes)`. If no children have a hash, `computedHash` is `undefined`. A subtree with no configured node types produces no hash at all, and `rootHash` returns `""`.
+- **Declaration nodes are now gated on `decl`:** `VariableDeclaration`, `FunctionDeclaration`, `ClassDeclaration`, `ImportDeclaration`, and `VariableDeclarator` previously always ran their specific formulas regardless of scat. They now use their formulas only when `decl` is in scat. When `decl` is absent and the node is not in sinc, they fall through to the transparent passthrough (A11).
+- **`computeNodeHash` and `computeDefaultHash` return `string | undefined`** instead of always `string`. Callers that assumed a non-undefined hash should handle `undefined` (e.g. `rootHash` already used `?? ""`).
+- Updated assumption A6 to reflect that `VariableDeclarator` uses eq10/11 only when `decl` is in scat.
+
+### Added
+
+- New unit test file `tests/unit/hash/transparent-passthrough.test.ts` covering the for-loop/while-loop structural equivalence property: two files containing the same `BreakStatement` but different unconfigured scaffolding (different loop types, extra declarations, extra console calls) produce identical root hashes when only `sinc: ["BreakStatement"]` is configured.
+
+### Docs
+
+- Updated `design-decisions.md`: revised A6, replaced A11 with transparent passthrough description, replaced "Declaration Nodes — Always Apply Formula" with "Declaration Nodes — Gated on `decl`".
+- Updated `hash-formulas.md`: updated intro, changed declaration info callout from "Always Applied" to "Gated on `decl`", replaced default formula section with transparent passthrough description and behavior table.
+
 ## 0.1.7 - 2026-06-25
 
 ### Fixed

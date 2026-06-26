@@ -10,7 +10,7 @@ import { validateConfig } from "./validate-config";
 export const CS_MAST_SIGNATURE_KEY = "cs-mast-s-hash";
 
 export interface CsMastTree {
-    /** Root AdapterNode with computedHash and isActivelyHashed set on every node. */
+    /** Root AdapterNode. computedHash is undefined for nodes with no active descendants. */
     root: import("../types/node-descriptor").AdapterNode;
     /** 64-char hex hash of the root (File) node. */
     rootHash: string;
@@ -44,10 +44,10 @@ export function cs_mast_init(source: string, config: CsMastConfig, adapter?: IPa
         const { node } = path;
         const hash = computeNodeHash(node, resolved);
 
-        st.hashByPath.set(path.pathKey, hash);
+        if (hash !== undefined) st.hashByPath.set(path.pathKey, hash);
 
         if (node.isActivelyHashed) {
-            const sig = buildSignatureFromConfig(st.config, hash);
+            const sig = buildSignatureFromConfig(st.config, hash as string);
             st.signatureMap.set(sig, path.pathKey);
             // Attach full signature to the original Babel node
             if (node._raw && typeof node._raw === "object") {

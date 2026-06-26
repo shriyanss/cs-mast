@@ -32,7 +32,7 @@ export interface AdapterNode {
     pathKey: string;
     /** Opaque back-reference to the original Babel node (used to attach cs-mast-s-hash). */
     _raw?: unknown;
-    /** 64-char hex hash set during post-order traversal. Always set after traversal. */
+    /** 64-char hex hash set during post-order traversal. Undefined for uncategorized nodes with no active descendants. */
     computedHash?: string;
     /** True only for nodes in an active scat category or sinc (added to signatureMap). */
     isActivelyHashed?: boolean;

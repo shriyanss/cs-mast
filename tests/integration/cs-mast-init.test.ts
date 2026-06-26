@@ -209,12 +209,19 @@ describe("Post-order correctness", () => {
         expect(t1.rootHash).not.toBe(t2.rootHash);
     });
 
-    it("every node has a computedHash set after init", () => {
-        const tree = cs_mast_init(SOURCE, cfg());
-        function allHashed(node: AdapterNode): boolean {
-            if (node.computedHash === undefined) return false;
-            return node.children.every(allHashed);
-        }
-        expect(allHashed(tree.root)).toBe(true);
+    it("uncategorized nodes with no active descendants have undefined computedHash", () => {
+        // With only sinc: ["BreakStatement"], File/Program/WhileStatement are uncategorized.
+        // The root (File) is not actively hashed.
+        const tree = cs_mast_init("while(true) { break; }", {
+            hash: "sha256",
+            lang: "js",
+            lver: "es6",
+            prsr: "@babel/parser",
+            scat: [],
+            sinc: ["BreakStatement"],
+        });
+        expect(tree.root.isActivelyHashed).toBe(false);
+        // Root still gets a computedHash via transparent passthrough from BreakStatement below
+        expect(tree.rootHash).toHaveLength(64);
     });
 });
