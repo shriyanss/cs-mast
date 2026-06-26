@@ -79,16 +79,21 @@ Built by concatenating the parent's `pathKey`, a `.`, and the key or index.
 
 ---
 
-## A6 — VariableDeclarator Always Includes NodeType
+## A6 — VariableDeclarator NodeType Inclusion (decl-gated)
 
-Equations 10 and 11 always include `"VariableDeclarator"` as the first hash-input component.
-Unlike `VariableDeclaration` (equations 8/9), there is no conditional on `decl` being in scat.
+Equations 10 and 11 always include `"VariableDeclarator"` as the first hash-input component
+when the formula applies. Unlike `VariableDeclaration` (equations 8/9), there is no
+conditional on `decl` being in scat within the formula itself.
 
-**Assumption:** `VariableDeclarator` always uses eq10/11 regardless of configuration.
+**Assumption:** `VariableDeclarator` uses eq10/11 **only when `decl` is in scat**. When
+`decl` is absent and `VariableDeclarator` is not explicitly listed in `sinc`, it is
+treated as an uncategorized node and follows the transparent passthrough rule (A11).
 
-**Rationale:** The spec text for equations 10/11 has no `decl`-active condition. This is
-intentional — `VariableDeclarator` is a structural binding node, not a declaration in the
-`decl` category. Its node type is always included.
+**Rationale:** The spec text for equations 10/11 has no `decl`-active condition, but the
+equations are only reachable when the `decl` category is configured. `VariableDeclarator`
+is a structural binding node subordinate to `VariableDeclaration`; without `decl` active,
+the entire declaration subtree should be transparent so that sibling unconfigured constructs
+are treated consistently.
 
 ---
 
@@ -146,20 +151,38 @@ twice with conflicting formulas.
 
 ---
 
-## A11 — Default Formula for Uncategorized Nodes
+## A11 — Transparent Passthrough for Uncategorized Nodes
 
-The spec only defines formulas for nodes in active categories. Nodes not in any active
-scat/sinc still need a `computedHash` so parent formulas (e.g. `FunctionDeclaration` needing
-`BodyHash` from its `BlockStatement` body) have valid inputs.
+The spec only defines formulas for nodes in active scat/sinc categories. Nodes not covered
+by either scat or sinc — including declaration types when `decl` is absent — use a
+**transparent passthrough** rather than a default Merkle formula.
 
-**Assumption:** Uncategorized nodes use the default Merkle propagation:
+**Assumption:** An uncategorized node (not in any active scat category and not in sinc)
+collects its direct children's non-undefined `computedHash` values in source order and
+returns:
 
 ```
-sha256(nodeType + concat(child.computedHash for child in children))
+sha256(concat(child.computedHash for child in children if child.computedHash is not undefined))
 ```
+
+If **no** direct children have a hash, `computedHash` remains `undefined`. This propagates
+upward: a subtree where no configured node types exist produces no hash at all.
+
+**Key properties:**
+- The node's own type does **not** contribute to the hash — the node is transparent.
+- Only children that already have a hash (from their own category formula or their own
+  transparent passthrough) are included.
+- Source order is preserved (not sorted).
+- If the configured scat/sinc categories match zero nodes in the file, `rootHash` is `""`
+  (the empty fallback in `CsMastTree`).
 
 Uncategorized nodes are **not added to the signature hashmap** — `cs_mast_s_exists` will
-not find them. Their hashes propagate upward silently.
+not find them.
+
+**Distinguishing from A12:** A12 (sinc formula) includes only directly-active children
+(`isActivelyHashed === true`). A11 includes any children with a non-undefined `computedHash`,
+which may itself be a transparent hash from lower descendants. A12 nodes are active
+fingerprinting targets; A11 nodes are transparent relays.
 
 ---
 
@@ -195,17 +218,19 @@ fingerprinting target, not a transparent relay.
 
 ---
 
-## Declaration Nodes — Always Apply Formula
+## Declaration Nodes — Gated on `decl`
 
-**Additional decision (not explicitly numbered in the plan):** Declaration node types
-(`VariableDeclaration`, `FunctionDeclaration`, `ClassDeclaration`, `ImportDeclaration`)
-always use their specific formulas (eq 8–18). The `decl` scat flag is a **variant selector**
-(controls whether `NodeType` appears in the hash input), not a gate that decides whether the
-formula runs.
+Declaration node types (`VariableDeclaration`, `FunctionDeclaration`, `ClassDeclaration`,
+`ImportDeclaration`, `VariableDeclarator`) use their specific formulas (eq 8–18, eq 10/11)
+**only when `decl` is in scat**. When `decl` is absent, they are treated as uncategorized
+nodes and follow the transparent passthrough rule (A11).
 
-This differs from loop and conditional categories, where the category flag IS a gate:
-- `loop` not in scat → loop node uses the default formula
-- `decl` not in scat → declaration node still uses its specific formula, but in the "without decl" variant
+This means:
+- `decl` in scat → declaration formula runs; `isActivelyHashed = true`; node enters the signatureMap
+- `decl` not in scat, node in sinc → sinc formula (A12) runs
+- `decl` not in scat, node not in sinc → transparent passthrough (A11); `isActivelyHashed = false`
 
-This ensures that `VariableDeclaration` always hashes its `VariableDeclarator` children
-consistently, and `FunctionDeclaration` always incorporates its `id`, params, and body.
+This is consistent with how `loop` and `cond` work (category flag IS a gate). The previous
+"always apply formula" behavior was removed to ensure that a file with no `decl` in scat
+treats all declaration subtrees as transparent, enabling structural equivalence comparisons
+across files that differ only in their declaration scaffolding.

@@ -1,32 +1,31 @@
 /**
  * Implements all 21 hash equations from the CS-MAST spec (Section IV-B3).
  *
- * Every node in the traversal receives a computedHash. Nodes in active
- * scat/sinc categories use category-specific equations; all others use
- * the default Merkle-propagation formula (A11: sha256(nodeType + childHashes)).
+ * Nodes in active scat/sinc categories use their category-specific equations.
+ * Nodes in neither scat nor sinc use the transparent passthrough (A11):
+ *   - If any direct children have a non-undefined computedHash, the node's hash
+ *     is sha256(concat of those hashes in source order).
+ *   - If no children have a hash, computedHash remains undefined.
  *
- * Special rule for declaration node types (VariableDeclaration, FunctionDeclaration,
- * ClassDeclaration, ImportDeclaration, VariableDeclarator): they ALWAYS use their
- * specific formula. The `decl` scat flag is a variant selector (controls whether
- * NodeType is included), not a gate. This ensures parent formulas that reference
- * child declaration hashes always receive a well-formed hash.
- * The `isActivelyHashed` flag is still only set true when `decl` is in scat.
+ * Declaration nodes (VariableDeclaration, FunctionDeclaration, ClassDeclaration,
+ * ImportDeclaration, VariableDeclarator) use their specific formulas ONLY when
+ * `decl` is in scat. Otherwise they fall through to the transparent passthrough.
  */
 import { sha256 } from "./sha256";
 import { literalValueString, childHash, refHash, refArrayHashes } from "./hash-input-builder";
 import type { AdapterNode } from "../types/node-descriptor";
 import type { ResolvedConfig } from "../scat/category-resolver";
 import { classifyNode } from "../scat/node-classifier";
-import { DECL_TYPES } from "../scat/category-map";
 
 /**
- * Computes and returns the 64-char hex hash for the given node.
- * Also sets node.computedHash and node.isActivelyHashed.
- * Must be called in post-order (children already have computedHash set).
+ * Computes and returns the hash for the given node (64-char hex, or undefined if no
+ * active descendants exist under an uncategorized node). Also sets node.computedHash
+ * and node.isActivelyHashed. Must be called in post-order (children already have
+ * computedHash set).
  */
-export function computeNodeHash(node: AdapterNode, resolved: ResolvedConfig): string {
+export function computeNodeHash(node: AdapterNode, resolved: ResolvedConfig): string | undefined {
     const cls = classifyNode(node, resolved);
-    let hash: string;
+    let hash: string | undefined;
 
     if (cls.isLit) {
         hash = hashLiteral(node, resolved);
@@ -34,12 +33,11 @@ export function computeNodeHash(node: AdapterNode, resolved: ResolvedConfig): st
         hash = hashIdentifier(node, resolved);
     } else if (cls.isOp) {
         hash = hashOperator(node, resolved);
-    } else if (node.nodeType === "VariableDeclarator") {
-        // VariableDeclarator always uses eq 10/11 (A6 — no decl condition).
+    } else if (resolved.hasDecl && node.nodeType === "VariableDeclarator") {
+        // VariableDeclarator uses eq10/11 only when decl is in scat (A6, updated).
         hash = hashVariableDeclarator(node);
-    } else if (DECL_TYPES.has(node.nodeType)) {
-        // Declaration nodes always use their specific formulas (eq8-18).
-        // resolved.hasDecl controls the variant (with/without NodeType).
+    } else if (cls.isDecl) {
+        // DECL_TYPES use their specific formulas only when decl is in scat.
         hash = hashDeclaration(node, resolved);
     } else if (cls.isLoop) {
         hash = hashLoop(node);
@@ -48,6 +46,7 @@ export function computeNodeHash(node: AdapterNode, resolved: ResolvedConfig): st
     } else if (cls.isSincOnly) {
         hash = hashSincNode(node);
     } else {
+        // Transparent passthrough (A11): not in any active scat category or sinc.
         hash = computeDefaultHash(node);
     }
 
@@ -116,7 +115,7 @@ function hashVariableDeclarator(node: AdapterNode): string {
     return sha256(node.nodeType + idH);
 }
 
-function hashDeclaration(node: AdapterNode, r: ResolvedConfig): string {
+function hashDeclaration(node: AdapterNode, r: ResolvedConfig): string | undefined {
     switch (node.nodeType) {
         case "VariableDeclaration": {
             const childH = refArrayHashes(node, "declarations");
@@ -209,14 +208,17 @@ function hashSincNode(node: AdapterNode): string {
     return sha256(node.nodeType + activeHashes.join(""));
 }
 
-// ─── Default formula (A11) ────────────────────────────────────────────────────
+// ─── Default formula (A11 — transparent passthrough) ─────────────────────────
 
 /**
- * Default for all uncategorized nodes: sha256(nodeType + concat of all children's hashes).
- * Ensures every node provides a valid hash to its parent formula,
- * even if it is not in any active scat/sinc category.
+ * Transparent passthrough for nodes not in any active scat category or sinc.
+ * Collects direct children that have a non-undefined computedHash (source order)
+ * and returns sha256 of their concatenation. Returns undefined when no children
+ * have a hash — this propagates upward so a subtree with no configured nodes
+ * produces no hash at all.
  */
-export function computeDefaultHash(node: AdapterNode): string {
-    const childHashes = node.children.map((c) => c.computedHash ?? "").join("");
-    return sha256(node.nodeType + childHashes);
+export function computeDefaultHash(node: AdapterNode): string | undefined {
+    const childHashes = node.children.map((c) => c.computedHash).filter((h): h is string => h !== undefined);
+    if (childHashes.length === 0) return undefined;
+    return sha256(childHashes.join(""));
 }
