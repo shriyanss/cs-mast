@@ -1,10 +1,19 @@
 import { cs_mast_init } from "../../../src/core/cs-mast-init";
 import type { CsMastConfig } from "../../../src/types/config";
-import * as fs from "fs";
-import * as path from "path";
 
-const FOR_JS = fs.readFileSync(path.join("/tmp/cs-mast-code-examples/for.js"), "utf8");
-const WHILE_JS = fs.readFileSync(path.join("/tmp/cs-mast-code-examples/while.js"), "utf8");
+// Source contents from /tmp/cs-mast-code-examples/ — inlined so the test runs in CI
+const FOR_JS = `for (x = 1; x < 10; x++) {
+\tconsole.log("Yeah");
+\tconsole.error("This will also break");
+
+\tconst a = 1;
+\tbreak;
+}`;
+
+const WHILE_JS = `while (true) {
+\tconsole.log("This will break");
+\tbreak;
+}`;
 
 const SINC_BREAK: CsMastConfig = {
     hash: "sha256",
@@ -44,13 +53,10 @@ describe("Transparent passthrough — structural equivalence", () => {
     });
 
     it("rootHash is empty string when no configured nodes exist in file", () => {
-        // No literals, identifiers, or any configured type in 'break;' with scat:[] sinc:["Identifier"]
-        // Actually BreakStatement has no children so with sinc:["Identifier"] and source "break;"
-        // there are no Identifiers → root hash should be empty.
-        // Use a source with no Identifiers (pure break statement).
+        // Source has no Identifiers — only NumericLiterals and BinaryExpression
         const tree = cs_mast_init("1 + 2;", {
             ...SINC_BREAK,
-            sinc: ["Identifier"], // source has no Identifiers — only literals and BinaryExpression
+            sinc: ["Identifier"],
         });
         expect(tree.rootHash).toBe("");
     });
